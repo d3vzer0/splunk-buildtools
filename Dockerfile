@@ -10,10 +10,14 @@ RUN useradd -ms /bin/bash splunkbuild
 RUN mkdir /usr/share/man/man1 
 RUN chown -R splunkbuild:splunkbuild /usr/share/man/man1 
 USER splunkbuild
+
+# Change working directory to local user
 WORKDIR /home/splunkbuild
+RUN chown -R splunkbuild:splunkbuild /home/splunkbuild
+RUN mkdir /home/splunkbuild/src
 
 # Set up virtualenvironment for appinspect
-ENV VIRTUAL_ENV_APPINSPECT=/home/splunkbuild/venv_appinspect
+ENV VIRTUAL_ENV_APPINSPECT=/home/splunkbuild/.venv/appinspect
 RUN virtualenv -p python3 $VIRTUAL_ENV_APPINSPECT
 ENV PATH="$VIRTUAL_ENV_APPINSPECT/bin:$PATH"
 
@@ -21,9 +25,10 @@ ENV PATH="$VIRTUAL_ENV_APPINSPECT/bin:$PATH"
 RUN pip install Pillow
 RUN wget https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
 RUN pip install splunk-appinspect-latest.tar.gz
+RUN rm splunk-appinspect-latest.tar.gz
 
 # Set up virtualenvironment for packagingtoolkit
-ENV VIRTUAL_ENV_TOOLKIT=/home/splunkbuild/venv_packagingtoolkit
+ENV VIRTUAL_ENV_TOOLKIT=/home/splunkbuild/.venv/packagingtoolkit
 RUN virtualenv -p python3 $VIRTUAL_ENV_TOOLKIT
 ENV PATH="$VIRTUAL_ENV_TOOLKIT/bin:$PATH"
 
@@ -31,3 +36,7 @@ ENV PATH="$VIRTUAL_ENV_TOOLKIT/bin:$PATH"
 RUN pip install semantic_version
 RUN wget https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.1.tar.gz
 RUN pip install splunk-packaging-toolkit-1.0.1.tar.gz
+RUN rm splunk-packaging-toolkit-1.0.1.tar.gz
+
+COPY --chown=splunkbuild:splunkbuild upload.py ./
+WORKDIR /home/splunkbuild/src
